@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet"
+        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" />
+    <title>Chat com OpenAI</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f4f4;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            min-height: 100vh;
+        }
+
+        #app-container {
+            display: flex;
+            width: 800px;
+            height: 800px;
+            margin: 20px;
+            background-color: #fff;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+            position: relative;
+        }
+
+        #menu {
+            flex-shrink: 0;
+            width: 120px;
+            background-color: #333;
+            color: white;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-end;
+        }
+
+        #menu button {
+            margin-bottom: 15px;
+            padding: 8px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            background-color: #555;
+            color: white;
+            display: flex;
+            align-items: center;
+        }
+
+        #menu button span {
+            margin-right: 5px;
+        }
+
+        #chat-container {
+            flex: 1;
+            flex-direction: column;
+            overflow: hidden;
+            position: relative;
+        }
+
+        #chat-messages {
+            flex: 1;
+            padding: 20px;
+            overflow-y: scroll;
+            max-height: calc(100% - 80px);
+        }
+
+        .message {
+            margin-bottom: 10px;
+            padding: 10px;
+            border-radius: 5px;
+            overflow: hidden;
+        }
+
+        .user-message {
+            background-color: #4CAF50;
+            color: white;
+            align-self: flex-end;
+            text-align: right;
+            max-width: 70%;
+            word-wrap: break-word;
+            margin-left: auto;
+        }
+
+        .ai-message {
+            background-color: gray;
+            color: white;
+            align-self: flex-start;
+            text-align: left;
+            max-width: 70%;
+            word-wrap: break-word;
+            margin-right: auto
+        }
+
+        #user-input {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: calc(100% - 20px);
+            display: flex;
+            padding: 10px;
+            background-color: #eee;
+            height: 60px;
+        }
+
+        #user-message {
+            flex-grow: 1;
+            padding: 8px;
+            border: none;
+            border-radius: 5px;
+            font-size: 20px;
+        }
+
+        #user-message::placeholder {
+            font-size: 20px;
+        }
+
+        #send-button {
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            background-color: #003274;
+            display: flex;
+            margin-left: 10px;
+            height: 100%;
+            align-items: center;
+        }
+
+        #send-button span {
+            margin-right: 5px;
+            font-size: 45px;
+        }
+
+        button {
+            padding: 8px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            background-color: #555;
+            color: white;
+        }
+
+        .summary-text {
+            background-color: #4997FF;
+            color: white;
+            padding: 10px;
+            border-radius: 10px;
+            margin: 20px 10px 10px 10px;
+            max-width: 200px;
+            justify-content: left;
+        }
+
+        img {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            width: 100px;
+            height: auto;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div id="app-container">
+        <a href="main.html"><img src="logo-small-nome.png" alt="Imagem de exemplo"></a>
+        <div id="menu">
+            <button id="reset-button">
+                <span class="material-symbols-outlined">chat_error</span>
+                LIMPAR
+            </button>
+            <button id="reuse-button">
+                <span class="material-symbols-outlined">quick_phrases</span>
+                REUSAR
+            </button>
+            <button id="summary-button">
+                <span class="material-symbols-outlined">sms</span>
+                RESUMO
+            </button>
+        </div>
+        <div id="chat-container">
+            <div id="chat-messages"></div>
+            <div id="user-input">
+                <input type="text" id="user-message" placeholder="Digite sua mensagem...">
+                <button id="send-button">
+                    <span class="material-symbols-outlined">send</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div id="outside-element"></div>
+
+    <script>
+        const chatMessages = document.getElementById('chat-messages');
+        const userMessageInput = document.getElementById('user-message');
+        const sendButton = document.getElementById('send-button');
+        const resetButton = document.getElementById('reset-button');
+        const reuseButton = document.getElementById('reuse-button');
+        const summaryButton = document.getElementById('summary-button');
+        const apiKey = 'Bearer ' + localStorage.getItem('openAI_APIKey');
+
+        sendButton.addEventListener('click', sendMessage);
+        resetButton.addEventListener('click', resetChat);
+        reuseButton.addEventListener('click', reuseMessage);
+        summaryButton.addEventListener('click', generateSummary)
+        userMessageInput.addEventListener('keyup', function (e) {
+            var key = e.which || e.keyCode;
+            if (key == 13) { // codigo da tecla enter
+                sendMessage()
+            }
+        });
+
+        function sendMessage() {
+            const userMessage = userMessageInput.value.trim();
+
+            if (userMessage !== '') {
+                appendMessage('user', userMessage);
+                userMessageInput.value = '';
+
+                var myHeaders = new Headers();
+                myHeaders.append("Content-Type", "application/json");
+                myHeaders.append("Authorization", apiKey);
+
+                var raw = {
+                    "model": "gpt-3.5-turbo",
+                    "temperature": 0.2
+                }
+
+                var messages = []
+                messages = allChatMessages()
+                console.log(messages)
+                messages.unshift(
+                    {
+                        "role": "system",
+                        "content": "Responda com no máximo 100 caracteres"
+                    },
+                )
+                raw.messages = messages
+
+                raw = JSON.stringify(raw)
+
+                var requestOptions = {
+                    method: 'POST',
+                    headers: myHeaders,
+                    body: raw,
+                    redirect: 'follow'
+                };
+
+                fetch("https://api.openai.com/v1/chat/completions", requestOptions)
+                    .then(response => response.json())
+                    .then(result => {
+                        const aiMessage = result.choices[0].message.content;
+                        appendMessage('ai', aiMessage);
+                    })
+                    .catch(error => console.log('error', error));
+            }
+        }
+
+        function appendMessage(sender, message) {
+            const messageElement = document.createElement('div');
+            messageElement.classList.add('message', `${sender}-message`);
+            messageElement.textContent = message;
+            chatMessages.appendChild(messageElement);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+
+        function resetChat() {
+            chatMessages.innerHTML = '';
+        }
+
+        function reuseMessage() {
+            const firstUserMessage = document.querySelector('.user-message');
+            if (firstUserMessage) {
+                userMessageInput.value = firstUserMessage.textContent;
+            }
+        }
+
+        function generateSummary() {
+            var myHeaders = new Headers();
+            myHeaders.append("Content-Type", "application/json");
+            myHeaders.append("Authorization", apiKey);
+
+            var raw = {
+                "model": "gpt-3.5-turbo",
+                "temperature": 0.2
+            }
+
+            var messages = []
+            messages = allChatMessages()
+            console.log(messages)
+            messages.push(
+                {
+                    "role": "system",
+                    "content": "Gere um resumo sobre os pontos principais da conversa. Não fique repetindo as frases da conversa. Não ultrapasse 200 caracteres. Começe o resumo com 'Nesta conversa foi falaso sobre ...'"
+                },
+            )
+            raw.messages = messages
+
+            raw = JSON.stringify(raw)
+
+            var requestOptions = {
+                method: 'POST',
+                headers: myHeaders,
+                body: raw,
+                redirect: 'follow'
+            };
+
+            fetch("https://api.openai.com/v1/chat/completions", requestOptions)
+                .then(response => response.json())
+                .then(result => {
+                    const aiMessage = result.choices[0].message.content;
+                    console.log(aiMessage)
+                    createOutsideElement(aiMessage)
+                    //appendMessage('ai', aiMessage);
+                })
+                .catch(error => console.log('error', error));
+        }
+
+        function allChatMessages() {
+            const messageElements = document.querySelectorAll('.message');
+            const messagesArray = [];
+
+            messageElements.forEach((element) => {
+                const role = element.classList.contains('user-message') ? 'user' : 'assistant';
+                const content = element.textContent.trim();
+
+                messagesArray.push({ role, content });
+            });
+
+            return messagesArray;
+        }
+
+        function createOutsideElement(text) {
+            const outsideElement = document.getElementById('outside-element');
+            outsideElement.innerHTML = ''; // Limpa o conteúdo anterior, se houver
+            const newElement = document.createElement('div');
+            newElement.classList.add('summary-text')
+            newElement.textContent = text;
+            outsideElement.appendChild(newElement);
+        }
+    </script>
+</body>
+
+</html>

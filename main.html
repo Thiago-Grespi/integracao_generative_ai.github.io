@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Software Exemplo</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            background-color: #f4f4f4;
+            margin: 0;
+            position: relative;
+        }
+
+        img {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            width: 100px;
+            height: auto;
+        }
+
+        h1 {
+            color: #333;
+        }
+
+        body > button {
+            display: block;
+            width: 800px;
+            margin: 0 auto;
+            padding: 20px 20px;
+            font-size: 18px;
+            margin-bottom: 20px;
+            background-color: #003274;
+            color: white;
+            border: none;
+            border-radius: 15px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+            text-transform: uppercase;
+        }
+
+        button:hover {
+            background-color: #4997FF;
+        }
+
+        input {
+            width: calc(100% - 130px); /* Ajustado para acomodar o botão */
+            margin-right: 10px; /* Adicionada margem entre o input e o botão */
+            padding: 10px;
+            font-size: 16px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            box-sizing: border-box;
+        }
+
+        .saveButton {
+            width: 120px; /* Largura ajustada */
+            padding: 15px;
+            font-size: 16px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        .saveButton:hover {
+            background-color: #45a049;
+        }
+
+        .apikey {
+            display: flex;
+            align-items: center; 
+            justify-content: center;
+            max-width: 800px; 
+            margin: 0 auto; 
+            padding: 20px; 
+            border-radius: 15px; 
+        }
+    </style>
+</head>
+<body>
+
+    <a href="chat.html"><img src="logo-small-nome.png" alt="Imagem de exemplo"></a>
+    
+
+    <h1>SOFTWARE DE EXEMPLO</h1>
+    <h3>Curso: Garantindo qualidade em softwares integrados com IAs Generativas</h3>
+    <h3>Instrutor: Thiago Grespi</h3>
+
+    <button onclick="window.location.href='chat.html'">Chat</button>
+    <button onclick="window.location.href='practical-recipe.html'">Receitas Práticas</button>
+    <button onclick="window.location.href='product-structure.html'">Estrutura de Produtos</button>
+    <button onclick="window.location.href='text-comparision.html'">Comparação de Texto</button>
+
+    <div class="apikey">
+        <input type="text" id="apiKey" placeholder="Digite sua API Key">
+        <button class="saveButton" onclick="saveApiKey()">Salvar</button>
+    </div>
+
+    <script>
+        function saveApiKey() {
+            var apiKey = document.getElementById('apiKey').value;
+            localStorage.setItem('openAI_APIKey', apiKey);
+            document.getElementById('apiKey').value = ''
+        }
+    </script>
+
+</body>
+</html>

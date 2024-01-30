@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Comparador de Texto</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding-top: 20px;
+            /* Adicionando espaço no topo da página */
+        }
+
+        img {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            width: 100px;
+            height: auto;
+        }
+
+        #container {
+            width: 800px;
+            height: 400px;
+            /* Alterando a altura para 400 pixels */
+            background-color: #fff;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+            text-align: center;
+            margin: 0 auto;
+            /* Centralizando o container na página */
+        }
+
+        #textareaContainer {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 20px;
+        }
+
+        textarea {
+            width: 45%;
+            height: 150px;
+            padding: 10px;
+            margin: 10px;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            resize: none;
+        }
+
+        #compareButton {
+            background-color: #003274;
+            color: #fff;
+            border: none;
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+            border-radius: 6px;
+            transition: background-color 0.3s ease;
+        }
+
+        #compareButton:hover {
+            background-color: #4997FF;
+        }
+
+        #result {
+            width: 100%;
+            margin-top: 20px;
+            padding: 10px;
+            font-size: 16px;
+            text-align: center;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            background-color: #f9f9f9;
+            color: #555;
+            pointer-events: none;
+            box-sizing: border-box;
+            /* Adicionando esta propriedade para incluir padding e borda na largura total */
+        }
+
+        #clearButton {
+            background-color: #f44336;
+            color: #fff;
+            border: none;
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+            border-radius: 6px;
+            transition: background-color 0.3s ease;
+            margin-right: 10px;
+            /* Adicionando margem à direita para espaçamento */
+        }
+
+        #clearButton:hover {
+            background-color: #d32f2f;
+        }
+    </style>
+</head>
+
+<body>
+    <a href="main.html"><img src="logo-small-nome.png" alt="Imagem de exemplo"></a>
+    <div id="container">
+        <h2>Comparador de Texto</h2>
+        <div id="textareaContainer">
+            <textarea id="textarea1" placeholder="Texto 1"></textarea>
+            <textarea id="textarea2" placeholder="Texto 2"></textarea>
+        </div>
+        <button id="clearButton" onclick="limparResultado()">Limpar</button>
+        <button id="compareButton" onclick="compararTextos()">Comparar</button>
+        <input id="result" placeholder="Resultado" readonly>
+    </div>
+
+    <script>
+        const apiKey = 'Bearer ' + localStorage.getItem('openAI_APIKey');
+
+        function compararTextos() {
+            // Obter os valores dos textos
+            var texto1 = document.getElementById('textarea1').value;
+            var texto2 = document.getElementById('textarea2').value;
+
+            // Comparar os textos
+            var myHeaders = new Headers();
+            myHeaders.append("Content-Type", "application/json");
+            myHeaders.append("Authorization", apiKey);
+
+            var raw = {
+                "model": "gpt-3.5-turbo",
+                "temperature": 0.2
+            }
+
+            var messages = [
+                {
+                    "role": "system",
+                    "content": `Compare o significado do ${texto1} com o significado do ${texto2} e dê uma nota de 0 a 100. Responda apenas com a nota, nada mais`
+                }
+            ]
+            raw.messages = messages
+
+            raw = JSON.stringify(raw)
+
+            var requestOptions = {
+                method: 'POST',
+                headers: myHeaders,
+                body: raw,
+                redirect: 'follow'
+            };
+
+            fetch("https://api.openai.com/v1/chat/completions", requestOptions)
+                .then(response => response.json())
+                .then(result => {
+                    const aiMessage = result.choices[0].message.content;
+                    var resultado = document.getElementById('result');
+                    resultado.value = aiMessage
+                })
+                .catch(error => console.log('error', error));
+        }
+
+        function limparResultado() {
+            document.getElementById('result').value = "";
+        }
+    </script>
+
+</body>
+
+</html>

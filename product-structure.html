@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gerador de Estrutura</title>
+    <style>
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            min-height: 100vh;
+            margin: 0;
+            background-color: #f4f4f4;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            padding: 20px;
+        }
+
+        img {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            width: 100px;
+            height: auto;
+        }
+
+        #container {
+            text-align: center;
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            margin-top: 20px;
+            width: 100%;
+            max-width: 800px;
+        }
+
+        textarea {
+            width: 100%;
+            max-width: 800px;
+            height: 300px;
+            max-height: 1000px;
+            padding: 20px;
+            resize: none;
+            margin-bottom: 20px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            box-sizing: border-box;
+            font-size: 16px;
+        }
+
+        #gerarBtn {
+            padding: 15px 30px;
+            margin-bottom: 20px;
+            /* Adicionando margem inferior para separar do próximo elemento */
+            cursor: pointer;
+            background-color: #003274;
+            color: #fff;
+            border: none;
+            border-radius: 4px;
+            font-size: 18px;
+            transition: background-color 0.3s;
+        }
+
+        #gerarBtn:hover {
+            background-color: #4997FF;
+        }
+
+        #resultado {
+            width: 100%;
+            max-width: 800px;
+            padding: 30px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            box-sizing: border-box;
+            background-color: #f9f9f9;
+            position: relative;
+        }
+
+        #resultado label {
+            display: block;
+            margin-bottom: 10px;
+            font-size: 16px;
+            font-weight: bold;
+            text-align: left;
+        }
+
+        #resultado textarea {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            box-sizing: border-box;
+            font-size: 16px;
+            resize: none;
+            margin-bottom: 10px;
+        }
+
+        #copiarBtn {
+            position: absolute;
+            bottom: 5px;
+            right: 5px;
+            padding: 8px;
+            cursor: pointer;
+            background-color: #003274;
+            color: #fff;
+            border: none;
+            border-radius: 4px;
+            font-size: 14px;
+            transition: background-color 0.3s;
+        }
+
+        #copiarBtn:hover {
+            background-color: #4997FF;
+        }
+    </style>
+</head>
+<body>
+    <a href="main.html"><img src="logo-small-nome.png" alt="Imagem de exemplo"></a>
+    <div id="container">
+        <h1>Gerador de JSON de produto</h1>
+        <textarea id="descricao" placeholder="Insira a descrição do produto"></textarea>
+        <br>
+        <button id="gerarBtn" onclick="gerarEstrutura()">Gerar Estrutura</button>
+        <div id="resultado">
+            <label for="estruturaResultado">Estrutura Gerada:</label>
+            <textarea id="estruturaResultado" readonly></textarea>
+            <button id="copiarBtn" onclick="copiarConteudo()">Copiar</button>
+        </div>
+    </div>
+
+    <script>
+        const apiKey = 'Bearer ' + localStorage.getItem('openAI_APIKey');
+
+        function gerarEstrutura() {
+            var json = document.getElementById('descricao').value
+            console.log(json)
+            var myHeaders = new Headers();
+                myHeaders.append("Content-Type", "application/json");
+                myHeaders.append("Authorization", apiKey);
+
+                var raw = {
+                    "model": "gpt-3.5-turbo",
+                    "temperature": 0.2
+                }
+
+                var messages = [
+                    {
+                        "role": "system",
+                        "content": "A partir da descrição do produto, preencha as propriedades do JSON a seguir" +
+                        "{nome_produto: , altura: , largura: , cor: , preco: }" +
+                        json
+                    }
+                ]
+                raw.messages = messages
+
+                raw = JSON.stringify(raw)
+
+                var requestOptions = {
+                    method: 'POST',
+                    headers: myHeaders,
+                    body: raw,
+                    redirect: 'follow'
+                };
+
+                fetch("https://api.openai.com/v1/chat/completions", requestOptions)
+                    .then(response => response.json())
+                    .then(result => {
+                        const aiMessage = result.choices[0].message.content;
+                        var resultado = document.getElementById('estruturaResultado');
+                        resultado.value = aiMessage
+                    })
+                    .catch(error => console.log('error', error));
+        }
+
+        function copiarConteudo() {
+            var resultado = document.getElementById('estruturaResultado');
+            resultado.select();
+            document.execCommand('copy');
+        }
+    </script>
+</body>
+</html>
